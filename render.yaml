@@ -2,7 +2,7 @@ services:
   - type: web
     name: pulsechat-server
     env: node
-    buildCommand: npm install && cd shared && npm install && npm run build && cd ../server && npm install && npm run build
+    buildCommand: npm install --include=dev && cd shared && npm install --include=dev && npm run build && cd ../server && npm install --include=dev && npm run build
     startCommand: cd server && npm start
     envVars:
       - key: NODE_ENV
