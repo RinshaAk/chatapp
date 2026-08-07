@@ -8,25 +8,25 @@ export const seedDemoAccounts = async () => {
         name: 'Alex Morgan',
         username: 'alex',
         email: 'alex@pulsechat.com',
-        role: 'USER'
+        role: 'user'
       },
       {
         name: 'Sarah Connor',
         username: 'sarah',
         email: 'sarah@pulsechat.com',
-        role: 'USER'
+        role: 'user'
       },
       {
         name: 'David Beckham',
         username: 'david',
         email: 'david@pulsechat.com',
-        role: 'USER'
+        role: 'user'
       },
       {
         name: 'System Admin',
         username: 'admin',
         email: 'admin@pulsechat.com',
-        role: 'ADMIN'
+        role: 'admin'
       }
     ];
 
