@@ -15,7 +15,7 @@
     "build:shared": "npm --prefix shared run build",
     "build:server": "npm --prefix server run build",
     "build:client": "npm --prefix client run build",
-    "build": "npm run build:shared && npm run build:server && npm run build:client",
+    "build": "npm run build:shared && npm run build:server",
     "start:server": "npm --prefix server start",
     "start:client": "npm --prefix client start",
     "seed": "npm --prefix server run seed"
