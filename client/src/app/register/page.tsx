@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { MessageSquare, Lock, Mail, User as UserIcon, Phone } from 'lucide-react';
+import { MessageSquare, Lock, Mail, User as UserIcon, Phone, Eye, EyeOff } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { api } from '../../lib/api';
@@ -18,6 +18,7 @@ export default function RegisterPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -88,9 +89,18 @@ export default function RegisterPage() {
 
           <Input
             label="Password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             placeholder="••••••••"
             leftIcon={<Lock className="w-4 h-4" />}
+            rightIcon={
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)}
+                className="hover:text-white transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            }
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
