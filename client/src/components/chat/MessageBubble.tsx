@@ -141,7 +141,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onReply, 
             {isMe && (
               <span>
                 {message.status === 'read' ? (
-                  <CheckCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <CheckCheck className="w-3.5 h-3.5 text-blue-400" />
                 ) : message.status === 'delivered' ? (
                   <CheckCheck className="w-3.5 h-3.5 text-slate-300" />
                 ) : (
