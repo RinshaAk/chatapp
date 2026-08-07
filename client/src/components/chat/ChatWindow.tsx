@@ -35,8 +35,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
         const res = await api.get(`/messages/chat/${chat._id}`);
         dispatch(setMessages({ chatId: chat._id, messages: res.messages || [] }));
         dispatch(clearUnreadCount(chat._id));
-        // Mark as read
+        // Mark as read via API
         await api.post(`/messages/chat/${chat._id}/read`);
+        // Notify others via socket
+        if (socket) {
+          socket.emit('chat:read', { chatId: chat._id });
+        }
       } catch (e) {}
     };
 

@@ -84,6 +84,32 @@ export const setupChatEvents = (io: Server, socket: AuthenticatedSocket) => {
     } as ReadReceiptPayload);
   });
 
+  socket.on('chat:read', async (data: { chatId: string }) => {
+    // Mark all unread messages as read in DB
+    await Message.updateMany(
+      { chatId: data.chatId, sender: { $ne: userId }, readBy: { $ne: userId } },
+      { $addToSet: { readBy: userId, deliveredTo: userId }, $set: { status: 'read' } }
+    );
+    // Broadcast to chat room that all messages are read by this user
+    io.to(`chat_${data.chatId}`).emit('chat:read', {
+      chatId: data.chatId,
+      userId
+    });
+  });
+
+  socket.on('message:delivered', async (data: { chatId: string; messageId: string }) => {
+    await Message.findByIdAndUpdate(data.messageId, {
+      $addToSet: { deliveredTo: userId },
+      $set: { status: 'delivered' }
+    });
+
+    io.to(`chat_${data.chatId}`).emit('message:delivered', {
+      chatId: data.chatId,
+      messageId: data.messageId,
+      userId
+    });
+  });
+
   // Message Reaction Sync
   socket.on(SOCKET_EVENTS.MESSAGE_REACTION, (data: { chatId: string; messageId: string; reaction: any }) => {
     io.to(`chat_${data.chatId}`).emit(SOCKET_EVENTS.MESSAGE_REACTION, data);

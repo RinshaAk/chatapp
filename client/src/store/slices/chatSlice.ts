@@ -60,6 +60,21 @@ export const chatSlice = createSlice({
         }
       }
     },
+    updateMessageStatus: (state, action: PayloadAction<{ chatId: string; messageId: string; status: 'delivered' | 'read' }>) => {
+      const { chatId, messageId, status } = action.payload;
+      if (state.messages[chatId]) {
+        const msg = state.messages[chatId].find(m => m._id === messageId);
+        if (msg) msg.status = status;
+      }
+    },
+    markChatAsRead: (state, action: PayloadAction<string>) => {
+      const chatId = action.payload;
+      if (state.messages[chatId]) {
+        state.messages[chatId].forEach(msg => {
+          if (msg.status !== 'read') msg.status = 'read';
+        });
+      }
+    },
     setTyping: (state, action: PayloadAction<{ chatId: string; username: string; isTyping: boolean }>) => {
       const { chatId, username, isTyping } = action.payload;
       if (!state.typingUsers[chatId]) state.typingUsers[chatId] = [];
@@ -106,6 +121,8 @@ export const {
   setMessages,
   addMessage,
   updateMessage,
+  updateMessageStatus,
+  markChatAsRead,
   setTyping,
   setRecording,
   setUserOnlineStatus,

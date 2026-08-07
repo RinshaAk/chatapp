@@ -60,6 +60,17 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     newSocket.on(SOCKET_EVENTS.MESSAGE_RECEIVE, async (message: IMessage) => {
       dispatch(addMessage(message));
 
+      // Handle delivery and read receipts
+      if (message.sender._id !== user._id) {
+        if (!document.hidden && message.chatId === activeChatId) {
+          // Instantly mark as read since they are looking at the chat
+          newSocket.emit(SOCKET_EVENTS.MESSAGE_READ, { chatId: message.chatId, messageId: message._id });
+        } else {
+          // Just mark as delivered
+          newSocket.emit('message:delivered', { chatId: message.chatId, messageId: message._id });
+        }
+      }
+
       // If the chat doesn't exist in our list yet, fetch the latest chats
       const state = require('../store/index').store.getState();
       const chatExists = state.chat.chats.some((c: any) => c._id === message.chatId);
@@ -87,6 +98,27 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           });
         }
       }
+    });
+
+    // Message status updates from others
+    newSocket.on('message:delivered', (data: { chatId: string; messageId: string; userId: string }) => {
+      dispatch(require('../store/slices/chatSlice').updateMessageStatus({
+        chatId: data.chatId,
+        messageId: data.messageId,
+        status: 'delivered'
+      }));
+    });
+
+    newSocket.on(SOCKET_EVENTS.MESSAGE_READ, (data: any) => {
+      dispatch(require('../store/slices/chatSlice').updateMessageStatus({
+        chatId: data.chatId,
+        messageId: data.messageId,
+        status: 'read'
+      }));
+    });
+
+    newSocket.on('chat:read', (data: { chatId: string; userId: string }) => {
+      dispatch(require('../store/slices/chatSlice').markChatAsRead(data.chatId));
     });
 
     // Typing events
