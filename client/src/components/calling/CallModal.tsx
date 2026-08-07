@@ -33,6 +33,29 @@ export const CallModal: React.FC = () => {
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteMediaRef = useRef<any>(null);
+  const ringtoneRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (currentCall && (currentCall.status === 'incoming' || currentCall.status === 'outgoing')) {
+      if (!ringtoneRef.current) {
+        ringtoneRef.current = new Audio('https://actions.google.com/sounds/v1/alarms/phone_ringing.ogg');
+        ringtoneRef.current.loop = true;
+      }
+      // Autoplay might be blocked by browser without user interaction, catch error
+      ringtoneRef.current.play().catch(e => console.error('[Ringtone Autoplay Blocked]', e));
+    } else {
+      if (ringtoneRef.current) {
+        ringtoneRef.current.pause();
+        ringtoneRef.current.currentTime = 0;
+      }
+    }
+
+    return () => {
+      if (ringtoneRef.current) {
+        ringtoneRef.current.pause();
+      }
+    };
+  }, [currentCall?.status]);
 
   const {
     localStream,
@@ -161,7 +184,11 @@ export const CallModal: React.FC = () => {
                 <div>
                   <h3 className="text-2xl font-bold text-white">{currentCall.caller.name}</h3>
                   <p className="text-sm text-slate-400">
-                    {isConnected ? 'Call Connected' : 'Ringing...'}
+                    {isConnected 
+                      ? 'Call Connected' 
+                      : currentCall.status === 'connected' 
+                        ? 'Connecting...' 
+                        : 'Ringing...'}
                   </p>
                 </div>
               </div>
