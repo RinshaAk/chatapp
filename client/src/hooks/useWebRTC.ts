@@ -102,6 +102,16 @@ export const useWebRTC = ({ targetUserId, isCaller, callType, callStatus, onCall
             setIsConnected(true);
           } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
             setNetworkQuality('Poor');
+            setIsConnected(false);
+          }
+        };
+
+        pc.oniceconnectionstatechange = () => {
+          if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+            setIsConnected(true);
+          } else if (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed') {
+            setNetworkQuality('Poor');
+            setIsConnected(false);
           }
         };
       } catch (error) {
