@@ -33,7 +33,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
     const fetchMessages = async () => {
       try {
         const res = await api.get(`/messages/chat/${chat._id}`);
-        dispatch(setMessages({ chatId: chat._id, messages: res.data || [] }));
+        dispatch(setMessages({ chatId: chat._id, messages: res.messages || [] }));
         dispatch(clearUnreadCount(chat._id));
         // Mark as read
         await api.post(`/messages/chat/${chat._id}/read`);
