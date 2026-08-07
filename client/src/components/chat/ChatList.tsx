@@ -91,7 +91,10 @@ export const ChatList: React.FC<ChatListProps> = ({ onOpenCreateGroup }) => {
             return (
               <button
                 key={chat._id}
-                onClick={() => dispatch(setActiveChatId(chat._id))}
+                onClick={() => {
+                  dispatch(setActiveChatId(chat._id));
+                  localStorage.setItem('pulsechat_active_chat', chat._id);
+                }}
                 className={`w-full p-3 rounded-2xl flex items-center gap-3 transition-all text-left group relative ${
                   isActive
                     ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/20'

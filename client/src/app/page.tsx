@@ -42,6 +42,12 @@ export default function Home() {
         // Load initial user chats
         const chatsRes = await api.get('/chats');
         dispatch(setChats(chatsRes.data));
+
+        // Restore active chat if exists
+        const savedChatId = localStorage.getItem('pulsechat_active_chat');
+        if (savedChatId && chatsRes.data.some((c: any) => c._id === savedChatId)) {
+          dispatch(require('../store/slices/chatSlice').setActiveChatId(savedChatId));
+        }
       } catch (err) {
         router.push('/login');
       } finally {
