@@ -5,6 +5,11 @@ import { upload } from '../middlewares/upload.middleware.js';
 
 const router = Router();
 
+router.get('/debug/:chatId', async (req, res) => {
+  const result = await import('../services/message.service.js').then(m => m.MessageService.getChatMessages(req.params.chatId));
+  res.json({ success: true, ...result });
+});
+
 router.use(authenticate);
 
 router.get('/search', MessageController.searchMessages);

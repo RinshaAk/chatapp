@@ -17,7 +17,9 @@ interface MessageBubbleProps {
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onReply, onEdit }) => {
   const { user } = useSelector((state: RootState) => state.auth);
-  const isMe = message.sender._id === user?._id;
+  // Handle case where sender might be null (e.g. user was deleted)
+  const senderId = message.sender?._id || message.sender;
+  const isMe = senderId === user?._id;
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null);
   const [showReactions, setShowReactions] = useState(false);
@@ -55,18 +57,18 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onReply, 
 
   return (
     <div className={`flex items-end gap-2 my-2 group relative ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-      {!isMe && <Avatar src={message.sender.avatar} name={message.sender.name} size="sm" />}
+      {!isMe && <Avatar src={message.sender?.avatar} name={message.sender?.name || 'Deleted User'} size="sm" />}
 
       <div className="max-w-[70%] flex flex-col">
         {/* Sender name for group chats */}
         {!isMe && (
-          <span className="text-[11px] font-semibold text-brand-300 ml-1 mb-0.5">{message.sender.name}</span>
+          <span className="text-[11px] font-semibold text-brand-300 ml-1 mb-0.5">{message.sender?.name || 'Deleted User'}</span>
         )}
 
         {/* Reply preview */}
         {message.replyTo && (
           <div className="bg-white/10 rounded-t-xl px-3 py-1.5 border-l-2 border-brand-400 text-xs text-slate-300 mb-0.5 backdrop-blur-sm">
-            <span className="font-semibold text-brand-300">{message.replyTo.sender.name}: </span>
+            <span className="font-semibold text-brand-300">{message.replyTo.sender?.name || 'Deleted User'}: </span>
             {message.replyTo.text}
           </div>
         )}

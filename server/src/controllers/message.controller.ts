@@ -20,6 +20,7 @@ export class MessageController {
       const page = parseInt(req.query.page as string || '1', 10);
       const limit = parseInt(req.query.limit as string || '50', 10);
       const result = await MessageService.getChatMessages(chatId, page, limit);
+      console.log(`[getChatMessages] Returning ${result.messages.length} messages for chat ${chatId}`);
       res.json({ success: true, ...result });
     } catch (error: any) {
       res.status(400).json({ success: false, error: error.message });
