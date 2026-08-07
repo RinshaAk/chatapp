@@ -11,7 +11,7 @@ const app = express();
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(
   cors({
-    origin: true,
+    origin: (origin, callback) => callback(null, origin || true),
     credentials: true
   })
 );
