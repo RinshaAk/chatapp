@@ -1,13 +1,16 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { IUser } from '@pulsechat/shared';
 
-export interface IUserDocument extends Omit<IUser, '_id'>, Document {}
+export interface IUserDocument extends Omit<IUser, '_id'>, Document {
+  password?: string;
+}
 
 const UserSchema = new Schema<IUserDocument>(
   {
     name: { type: String, required: true, trim: true },
     username: { type: String, required: true, unique: true, lowercase: true, trim: true, index: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true, index: true },
+    password: { type: String, required: true },
     phone: { type: String, default: '' },
     bio: { type: String, default: 'Hey there! I am using PulseChat.' },
     avatar: { type: String, default: '' },
