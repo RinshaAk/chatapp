@@ -13,9 +13,10 @@ interface MessageBubbleProps {
   message: IMessage;
   onReply?: (msg: IMessage) => void;
   onEdit?: (msg: IMessage) => void;
+  onDeleted?: (msg: IMessage) => void;
 }
 
-export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onReply, onEdit }) => {
+export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onReply, onEdit, onDeleted }) => {
   const { user } = useSelector((state: RootState) => state.auth);
   // Handle case where sender might be null (e.g. user was deleted)
   const senderId = message.sender?._id || message.sender;
@@ -51,7 +52,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onReply, 
 
   const handleDelete = async (everyone: boolean) => {
     try {
-      await api.delete(`/messages/${message._id}?everyone=${everyone}`);
+      const res = await api.delete(`/messages/${message._id}?everyone=${everyone}`);
+      const deletedMessage = (res.data || res).data || (res.data || res);
+      onDeleted?.(deletedMessage);
     } catch (e) {}
   };
 

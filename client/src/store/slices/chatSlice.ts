@@ -34,6 +34,12 @@ export const chatSlice = createSlice({
     setMessages: (state, action: PayloadAction<{ chatId: string; messages: IMessage[] }>) => {
       state.messages[action.payload.chatId] = action.payload.messages;
     },
+    prependMessages: (state, action: PayloadAction<{ chatId: string; messages: IMessage[] }>) => {
+      const existing = state.messages[action.payload.chatId] || [];
+      const existingIds = new Set(existing.map(message => message._id));
+      const olderMessages = action.payload.messages.filter(message => !existingIds.has(message._id));
+      state.messages[action.payload.chatId] = [...olderMessages, ...existing];
+    },
     addMessage: (state, action: PayloadAction<IMessage>) => {
       const { chatId } = action.payload;
       if (!state.messages[chatId]) {
@@ -119,6 +125,7 @@ export const {
   setChats,
   setActiveChatId,
   setMessages,
+  prependMessages,
   addMessage,
   updateMessage,
   updateMessageStatus,

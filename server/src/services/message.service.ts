@@ -63,9 +63,12 @@ export class MessageService {
     ]);
   }
 
-  static async getChatMessages(chatId: string, page = 1, limit = 50) {
+  static async getChatMessages(chatId: string, page = 1, limit = 50, userId?: string) {
     const skip = (page - 1) * limit;
-    const messages = await Message.find({ chatId })
+    const filter: any = { chatId };
+    if (userId) filter.deletedFor = { $ne: userId };
+
+    const messages = await Message.find(filter)
       .populate('sender', '_id name username avatar status lastSeen')
       .populate({ path: 'replyTo', populate: { path: 'sender', select: '_id name username' } })
       .populate('reactions.user', '_id name username avatar')
@@ -73,7 +76,7 @@ export class MessageService {
       .skip(skip)
       .limit(limit);
 
-    const total = await Message.countDocuments({ chatId });
+    const total = await Message.countDocuments(filter);
 
     return {
       messages: messages.reverse(),

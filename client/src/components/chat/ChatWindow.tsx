@@ -8,12 +8,17 @@ import { MessageInput } from './MessageInput';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store/index';
 import { api } from '../../lib/api';
-import { setMessages, addMessage, clearUnreadCount } from '../../store/slices/chatSlice';
+import { setMessages, prependMessages, addMessage, updateMessage, clearUnreadCount } from '../../store/slices/chatSlice';
 import { useSocket } from '../../context/SocketContext';
 import { MessageSquare } from 'lucide-react';
 
 interface ChatWindowProps {
   chat: IChat;
+}
+
+interface MessagePageResponse {
+  messages?: IMessage[];
+  pagination?: { page: number; pages: number };
 }
 
 export const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
@@ -23,6 +28,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
   const [replyingTo, setReplyingTo] = useState<IMessage | null>(null);
   const [editingMsg, setEditingMsg] = useState<IMessage | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
+  const currentPageRef = useRef(1);
+  const hasMoreMessagesRef = useRef(true);
+  const loadingOlderRef = useRef(false);
 
   const chatMessages = messages[chat._id] || [];
   const currentTyping = typingUsers[chat._id] || [];
@@ -30,17 +39,17 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
 
   // Fetch initial messages for active chat
   useEffect(() => {
+    currentPageRef.current = 1;
+    hasMoreMessagesRef.current = true;
+
     const fetchMessages = async () => {
       try {
         const res = await api.get(`/messages/chat/${chat._id}`);
-        // Handle all possible API response structures just in case
-        let fetchedMessages = [];
-        if (Array.isArray(res)) fetchedMessages = res;
-        else if (res && Array.isArray(res.messages)) fetchedMessages = res.messages;
-        else if (res && Array.isArray(res.data)) fetchedMessages = res.data;
-        else if (res && res.data && Array.isArray(res.data.messages)) fetchedMessages = res.data.messages;
+        const payload = (res.data || res) as MessagePageResponse;
+        const fetchedMessages = Array.isArray(payload.messages) ? payload.messages : [];
         
         dispatch(setMessages({ chatId: chat._id, messages: fetchedMessages }));
+        hasMoreMessagesRef.current = (payload.pagination?.page || 1) < (payload.pagination?.pages || 1);
         dispatch(clearUnreadCount(chat._id));
         // Mark as read via API
         await api.post(`/messages/chat/${chat._id}/read`);
@@ -62,7 +71,39 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
         socket.emit('chat:leave', chat._id);
       }
     };
-  }, [chat._id]);
+  }, [chat._id, socket]);
+
+  const loadOlderMessages = async () => {
+    if (loadingOlderRef.current || !hasMoreMessagesRef.current) return;
+
+    const scrollElement = messagesScrollRef.current;
+    if (!scrollElement) return;
+
+    loadingOlderRef.current = true;
+    const previousHeight = scrollElement.scrollHeight;
+    const nextPage = currentPageRef.current + 1;
+
+    try {
+      const res = await api.get(`/messages/chat/${chat._id}?page=${nextPage}`);
+      const payload = (res.data || res) as MessagePageResponse;
+      const olderMessages = Array.isArray(payload.messages) ? payload.messages : [];
+      dispatch(prependMessages({ chatId: chat._id, messages: olderMessages }));
+      currentPageRef.current = nextPage;
+      hasMoreMessagesRef.current = nextPage < (payload.pagination?.pages || nextPage);
+
+      requestAnimationFrame(() => {
+        scrollElement.scrollTop += scrollElement.scrollHeight - previousHeight;
+      });
+    } finally {
+      loadingOlderRef.current = false;
+    }
+  };
+
+  const handleMessagesScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    if (event.currentTarget.scrollTop <= 80) {
+      void loadOlderMessages();
+    }
+  };
 
   // Auto scroll to bottom
   useEffect(() => {
@@ -85,6 +126,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
     }
   };
 
+  const handleMessageDeleted = (message: IMessage) => {
+    dispatch(updateMessage(message));
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full bg-dark-bg relative overflow-hidden">
       {/* Top Header */}
@@ -95,7 +140,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
       />
 
       {/* Messages Scroll Area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      <div ref={messagesScrollRef} onScroll={handleMessagesScroll} className="flex-1 overflow-y-auto p-6 space-y-4">
         {chatMessages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-500">
             <MessageSquare className="w-12 h-12 opacity-30 mb-2" />
@@ -108,6 +153,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ chat }) => {
               message={msg}
               onReply={(m) => setReplyingTo(m)}
               onEdit={(m) => setEditingMsg(m)}
+              onDeleted={handleMessageDeleted}
             />
           ))
         )}
